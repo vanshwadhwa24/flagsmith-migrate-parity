@@ -32,7 +32,27 @@ Not enforced in code: that a human approved. The tool cannot tell a person from 
 ## Not tested / limits
 Multivariate flags, segment priority, identity overrides, multiple environments, operators other than `eq` and `in`, Flagsmith Cloud, other legacy systems. Parity is shown only for the sampled identities and attributes. This is not a production migration. The reference legacy app is ours, not a real vendor's.
 
-Token note: SKILL.md plus the tool output of a recorded demo run is about 1,400 tokens by a tokenizer count. That is not a full agent-run total and is not an efficiency claim.
+Token note: SKILL.md plus the tool output of a recorded demo run is about 1,700 tokens (SKILL.md 900 + demo output 821, counted with tiktoken cl100k_base on the files in this repo). That is not a full agent-run total and is not an efficiency claim.
+
+## Run the tests
+
+Unit tests need only Python 3: `python3 -m unittest tests/test_unit.py`.
+
+The end-to-end test and demo run against a local, throwaway Flagsmith. They never touch a real account. You need:
+- a checkout of https://github.com/Flagsmith/flagsmith with its API dependencies installable by `uv` (Python 3.12),
+- the Flagsmith CLI (`npm install -g @flagsmith/cli`, or set `FS_CLI` to its path),
+- `jq`, `curl`, `python3`,
+- an empty throwaway Postgres database, for example `docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=pw postgres:16`.
+
+```
+export FS_API=/path/to/flagsmith/api
+export DATABASE_URL=postgresql://postgres:pw@127.0.0.1:5432/postgres
+export FS_CLI=flagsmith            # or the full path to the CLI
+bash tests/e2e_local.sh            # 14 checks, prints PASS/FAIL
+bash examples/demo.sh              # native vs preserve narrative
+```
+
+The scripts start the Flagsmith dev server on 127.0.0.1:8000 and create fresh empty projects. They apply database migrations first (first run takes a few minutes). They leave the server running; stop it afterwards.
 
 ## Layout
 `skills/flagsmith-migrate-parity/` the skill and `scripts/fsmig.py`; `examples/legacy-app/` reference legacy flags and replay oracle; `tests/`; `docs/demo-run.txt` a recorded run.
