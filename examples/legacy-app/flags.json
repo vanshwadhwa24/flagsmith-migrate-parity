@@ -1,0 +1,10 @@
+{"flags": [
+ {"name": "new-checkout", "enabled": true},
+ {"name": "pro-banner", "enabled": true, "rules": [{"attribute": "plan", "operator": "eq", "value": "pro"}]},
+ {"name": "fast-search", "enabled": true, "rollout_percent": 30},
+ {"name": "max-items", "enabled": true, "value": 25},
+ {"name": "legacy-kill", "enabled": false},
+ {"name": "pro-beta", "enabled": true, "rollout_percent": 50, "rules": [{"attribute": "plan", "operator": "eq", "value": "pro"}]},
+ {"name": "geo-banner", "enabled": true, "rules": [{"attribute": "country", "operator": "in", "value": "IN,US"}]},
+ {"name": "price-curve", "enabled": true, "value": {"tiers": [1, 2, 3]}}
+]}
