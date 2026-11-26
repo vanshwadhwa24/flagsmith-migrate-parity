@@ -1,0 +1,32 @@
+$ fsmig inventory
+{"supported":["new-checkout","pro-banner","fast-search","max-items","legacy-kill","pro-beta","geo-banner","price-curve"],"unsupported":{}}
+
+### Attempt 1: Flagsmith-native percentage split
+
+$ fsmig plan --mode native
+{"plan_hash":"05fb5c1e7350","mode":"native","file":"pn.json","creates":["new-checkout","pro-banner","fast-search","max-items","legacy-kill","pro-beta","geo-banner","price-curve"],"not_migrated":{},"notes":["fast-search: Flagsmith-native split. Same percentage, DIFFERENT users than legacy.","pro-beta: Flagsmith-native split. Same percentage, DIFFERENT users than legacy."],"writes_nothing_yet":true}
+
+$ fsmig apply --approve-hash 05fb5c1e7350
+{"applied":17,"steps":["feature:new-checkout","feature:pro-banner","segment:pro-banner","override:pro-banner","feature:fast-search","segment:fast-search","override:fast-search","feature:max-items","type:max-items","feature:legacy-kill","feature:pro-beta","segment:pro-beta","override:pro-beta","feature:geo-banner","segment:geo-banner","override:geo-banner","feature:price-curve"],"next":"run replay; do not switch the app until parity is shown"}
+
+$ fsmig replay --mode native
+{"verdict":"MISMATCHES","mode":"native","identities":800,"fast_search":{"mismatch":345,"legacy_on":255,"flagsmith_on":240,"examples":["user-3","user-7","user-8"],"cause":"Flagsmith buckets by its own hash, legacy by its own: same share of users, different users. Use --mode preserve or accept the reshuffle."},"pro_beta":{"mismatch":210,"legacy_on":197,"flagsmith_on":217,"examples":["user-23","user-26","user-27"],"cause":"Flagsmith buckets by its own hash, legacy by its own: same share of users, different users. Use --mode preserve or accept the reshuffle."},"other_flags_mismatch":0}
+
+$ fsmig gate
+{"gate":"CLOSED","why":["last replay verdict is MISMATCHES"]}
+
+### Attempt 2: preserve the legacy buckets
+
+$ fsmig plan --mode preserve
+{"plan_hash":"7d679978e915","mode":"preserve","file":"pp.json","creates":["new-checkout","pro-banner","fast-search","max-items","legacy-kill","pro-beta","geo-banner","price-curve"],"not_migrated":{},"notes":["fast-search: keeps legacy buckets. The app MUST send trait legacy_bucket_fast_search (legacy bucket 0-99) on every evaluation.","pro-beta: keeps legacy buckets. The app MUST send trait legacy_bucket_pro_beta (legacy bucket 0-99) on every evaluation."],"writes_nothing_yet":true}
+
+$ fsmig apply --approve-hash 7d679978e915
+{"applied":17,"steps":["feature:new-checkout","feature:pro-banner","segment:pro-banner","override:pro-banner","feature:fast-search","segment:fast-search","override:fast-search","feature:max-items","type:max-items","feature:legacy-kill","feature:pro-beta","segment:pro-beta","override:pro-beta","feature:geo-banner","segment:geo-banner","override:geo-banner","feature:price-curve"],"next":"run replay; do not switch the app until parity is shown"}
+
+$ fsmig replay --mode preserve
+{"verdict":"PARITY_ON_SAMPLE","mode":"preserve","identities":800,"total_mismatches":0}
+
+$ fsmig gate
+{"gate":"OPEN_FOR_HUMAN_APPROVAL","note":"parity on a sample only; a human must still approve switching the app"}
+
+(a human is now asked to approve switching the app; the tool never switches it)
