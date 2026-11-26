@@ -22,12 +22,12 @@ say() { echo; echo "\$ $*"; }
 cp $FL legacy.json
 say "fsmig inventory"; python3 $F inventory --flags legacy.json
 echo; echo "### Attempt 1: Flagsmith-native percentage split"
-newproj n; say "fsmig plan --mode native"; H=$(python3 $F plan --flags legacy.json --mode native --out pn.json | tee /dev/stderr | jq -r .plan_hash) 2>&1
+newproj n; say "fsmig plan --mode native"; python3 $F plan --flags legacy.json --mode native --out pn.json | tee pn.out; H=$(jq -r .plan_hash pn.out)
 say "fsmig apply --approve-hash $H"; apply pn.json $H
 say "fsmig replay --mode native"; replay --mode native --plan pn.json --result rn.json | jq -c '{verdict,mode,identities,fast_search:.flags["fast-search"],pro_beta:.flags["pro-beta"],other_flags_mismatch:([.flags|to_entries[]|select(.key!="fast-search" and .key!="pro-beta")|.value.mismatch]|add)}'
 say "fsmig gate"; python3 $F gate --flags legacy.json --plan pn.json --result rn.json
 echo; echo "### Attempt 2: preserve the legacy buckets"
-newproj p; say "fsmig plan --mode preserve"; H=$(python3 $F plan --flags legacy.json --mode preserve --out pp.json | tee /dev/stderr | jq -r .plan_hash) 2>&1
+newproj p; say "fsmig plan --mode preserve"; python3 $F plan --flags legacy.json --mode preserve --out pp.json | tee pp.out; H=$(jq -r .plan_hash pp.out)
 say "fsmig apply --approve-hash $H"; apply pp.json $H
 say "fsmig replay --mode preserve"; replay --mode preserve --plan pp.json --result rp.json | jq -c '{verdict,mode,identities,total_mismatches:([.flags[]|.mismatch]|add)}'
 say "fsmig gate"; python3 $F gate --flags legacy.json --plan pp.json --result rp.json
