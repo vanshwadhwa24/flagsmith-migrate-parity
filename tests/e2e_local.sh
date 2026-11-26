@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # End-to-end regression against a LOCAL self-hosted Flagsmith (never a real account).
 # Needs: a Flagsmith checkout with its API deps (FS_API=/path/to/flagsmith/api, run via `uv`),
-# the flagsmith CLI (FS_CLI), and a Postgres reachable by DATABASE_URL (pgserver in our runs).
+# the flagsmith CLI (FS_CLI), jq, curl, uv, and a throwaway Postgres reachable by DATABASE_URL.
+# See README, section "Run the tests".
 # Creates fresh empty projects; prints PASS/FAIL per check; exit 1 if any FAIL.
 set -u
 R=$(cd "$(dirname "$0")/.." && pwd); F=$R/skills/flagsmith-migrate-parity/scripts/fsmig.py
 FL=$R/examples/legacy-app/flags.json; OR="python3 $R/examples/legacy-app/oracle.py"
-FS_API=${FS_API:-/tmp/fs/api}; FS_CLI=${FS_CLI:-flagsmith}; N=${N:-500}; W=$(mktemp -d); FAILS=0
+FS_API=${FS_API:?set FS_API to the api/ directory of a local Flagsmith checkout (see README)}; FS_CLI=${FS_CLI:-flagsmith}; N=${N:-500}; W=$(mktemp -d); FAILS=0
 export EXPERIMENTATION_ENABLED=true DJANGO_SETTINGS_MODULE=app.settings.common SECRET_KEY=localtest DJANGO_ALLOWED_HOSTS='*'
-export DATABASE_URL=${DATABASE_URL:-'postgresql://postgres:@/postgres?host=/tmp/pgdata'}
-if [ "${START_PG:-1}" = 1 ]; then /tmp/pgv/bin/python -c "import pgserver;pgserver.get_server('/tmp/pgdata',cleanup_mode=None)" >/dev/null 2>&1; fi
+export DATABASE_URL=${DATABASE_URL:?set DATABASE_URL to a throwaway local Postgres (see README)}
+(cd "$FS_API" && uv run --python 3.12 --no-dev python manage.py migrate --noinput >"$W/migrate.log" 2>&1) || { echo "migrate failed, see $W/migrate.log"; exit 2; }
 (cd "$FS_API" && uv run --python 3.12 --no-dev python manage.py runserver 127.0.0.1:8000 --noreload >"$W/srv.log" 2>&1 &)
 for i in $(seq 1 60); do curl -s -o /dev/null http://127.0.0.1:8000/health/liveness && break; sleep 2; done
 sleep 3
