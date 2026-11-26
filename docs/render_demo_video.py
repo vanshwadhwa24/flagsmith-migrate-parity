@@ -1,10 +1,12 @@
-import textwrap, subprocess
+import textwrap, subprocess, os
+HERE=os.path.dirname(os.path.abspath(__file__))
+FONTDIR=os.environ.get("FONT_DIR","/usr/share/fonts/truetype/dejavu")
 from PIL import Image, ImageDraw, ImageFont
 W,H=1280,720
-mono=ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",17)
-big=ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf",26)
-mid=ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",21)
-src=open("/tmp/entry/flagsmith-migrate-parity/docs/demo-run.txt").read().splitlines()
+mono=ImageFont.truetype(FONTDIR+"/DejaVuSansMono.ttf",17)
+big=ImageFont.truetype(FONTDIR+"/DejaVuSansMono-Bold.ttf",26)
+mid=ImageFont.truetype(FONTDIR+"/DejaVuSansMono.ttf",21)
+src=open(os.path.join(HERE,"demo-run.txt")).read().splitlines()
 src=[l for l in src if l.strip()]
 COLS=118; ROWS=24; LH=23
 frames=[]  # (image, seconds)
