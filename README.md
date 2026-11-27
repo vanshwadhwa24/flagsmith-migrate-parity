@@ -2,11 +2,9 @@
 
 An agent skill for the Flagsmith CLI. It moves an app's existing feature flags to Flagsmith and checks, user by user, that nobody's experience changed.
 
-Work in progress. Not yet a submission.
-
 ## The problem
 
-A 30% rollout moved to Flagsmith is still 30%, but it is not the same 30%. Flagsmith buckets users with its own hash. In local runs on the reference app (800 identities, a 30% rollout), the legacy rule and Flagsmith's native split enabled nearly the same number of users (255 vs 256 in one run, 255 vs 224 in another), but 333 to 349 individual users got a different answer. The exact counts change from project to project because Flagsmith hashes with the segment's id. A check on totals passes. A check per user does not.
+A 30% rollout moved to Flagsmith is still 30%, but it is not the same 30%. Flagsmith buckets users with its own hash. In the run shown in the demo video on the reference app (500 identities, two percentage-split flags, Flagsmith-native mode), the legacy rule and Flagsmith enabled nearly the same number of users (fast-search: 162 vs 133, pro-beta: 116 vs 127), but 215 and 125 individual users got a different answer. Exact counts change from project to project because Flagsmith hashes with the segment's id. A check on totals passes. A check per user does not. In preserve mode the same run had 0 mismatches on the 500-identity sample.
 
 ## What the skill does
 

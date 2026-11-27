@@ -11,13 +11,15 @@ Tools: the `flagsmith` CLI (auth by env var, never in arguments) and `scripts/fs
 
 ## Steps
 
+For routine use the commands below are complete, so you do not need to read `scripts/fsmig.py` or the oracle source. Run `fsmig.py <command> -h` if a command fails or its output is unclear, and inspect the source when you hit a failure, an unsupported flag, or need to review the tool for security. The safety rules stay: create-only apply, approval of the exact plan hash, a human before the app is switched.
+
 1. Inventory (read-only): `python3 scripts/fsmig.py inventory --flags flags.json`. Anything under `unsupported` is NOT migrated. Say so to the user. Do not approximate it.
 2. Pick a mode for rollout flags:
    - `preserve` (default): same users. The app must send the legacy bucket as a trait on every evaluation.
    - `native`: Flagsmith's own split. Same percentage, different users. Only if the user accepts the reshuffle.
 3. Plan (read-only): `fsmig.py plan --flags flags.json --mode preserve --out plan.json`. Show the user `plan_hash`, what will be created, what is not migrated, and the notes.
 4. Get explicit approval of that plan hash. Then: `fsmig.py apply --plan plan.json --approve-hash <hash> --project <id> --environment <name>`. It creates only; it refuses if any feature already exists or the hash differs. On a failed step it stops and reports the partial state. Do not delete anything unasked.
-5. Replay: `fsmig.py replay --flags flags.json --legacy-cmd "<oracle>" --mode <same mode> --api-url <url> --n 2000 --plan plan.json --result result.json`. Exit 0 = parity on the sample, 1 = mismatches, 2 = no verdict (error), 3 = parity but some flags not migrated.
+5. Replay: `fsmig.py replay --flags flags.json --legacy-cmd "<oracle>" --mode <same mode> --api-url <url> --n 500 --plan plan.json --result result.json`. Exit 0 = parity on the sample, 1 = mismatches, 2 = no verdict (error), 3 = parity but some flags not migrated.
 6. Report each mismatch with its `cause`. If the verdict is not `PARITY_ON_SAMPLE`, do not say the migration is done. Offer: fix and replay again, switch to preserve, or stop.
 7. Run `fsmig.py gate --flags flags.json --plan plan.json --result result.json`. Exit 0 (OPEN_FOR_HUMAN_APPROVAL) means this exact plan and flags file showed parity on the sample. Exit 1 means CLOSED: do not ask for approval, fix the reasons it lists. The gate cannot check the human. Only after an open gate, ask the user to approve switching the app. Never switch it yourself.
 
